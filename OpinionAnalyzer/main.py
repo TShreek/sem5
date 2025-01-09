@@ -170,32 +170,35 @@ def build_ast_from_tokens(tokens):
 
 
 while True:
-    user_review = input("\nEnter a review (scrambled or normal, or type 'quit' to exit): ")
+    user_review = input("\nEnter a scrambled review (or type 'quit' to exit): ")
     if user_review.lower() == 'quit':
         break
 
-    # Unscramble the input
+    # 1) Unscramble the user's input, including stopwords
     unscrambled_review = unscramble_sentence(user_review)
-    print(f"Unscrambled Input: {unscrambled_review}")
+    print(f"Unscrambled Input (with stopwords): {unscrambled_review}")
 
-    # Clean the unscrambled input
+    # 2) Clean the unscrambled input
     cleaned_input = clean_text(unscrambled_review)
+    print(f"Cleaned Input (without stopwords): {cleaned_input}")
 
-    # Tokenize and build AST
+    # 3) Tokenize and build the AST
     cleaned_tokens = nltk.word_tokenize(cleaned_input)
     ast_root = build_ast_from_tokens(cleaned_tokens)
     print("\nAbstract Syntax Tree (AST) for your input:")
     for pre, fill, node in RenderTree(ast_root):
         print(f"{pre}{node.name}")
 
-    # Transform and predict
+    # 4) Transform the cleaned input into TF-IDF features
     input_features = vectorizer.transform([cleaned_input])
-    prediction = model.predict(input_features)[0]
 
+    # 5) Predict sentiment
+    prediction = model.predict(input_features)[0]
     if prediction == 1:
         print("Predicted feedback is : POSITIVE")
     else:
         print("Predicted feedback is : NEGATIVE")
+
 
 
 
