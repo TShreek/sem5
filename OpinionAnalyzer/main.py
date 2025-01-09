@@ -24,7 +24,9 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
 import matplotlib.pyplot as plt
 import seaborn as sns
-
+#For unscrambling sentence and words
+from itertools import permutations
+from nltk.corpus import words
 
 # STEP A: LOAD THE DATASET (IMDB) WITH HUGGING FACE
 print("Loading IMDB dataset from Hugging Face 'datasets' library...")
@@ -127,6 +129,22 @@ plt.show()
 
 print("All done! You now have a trained sentiment classifier on the IMDB dataset.")
 
+# Unscrambling words and sentences
+# unscrambling each word in a sentence
+def unscramble_word(scrambled):
+    """Unscrambles a scrambled word using a dictionary lookup."""
+    word_list = set(words.words())  # Use NLTK's English word list
+    scrambled_permutations = set([''.join(p) for p in permutations(scrambled)])
+    valid_words = scrambled_permutations.intersection(word_list)
+    return valid_words if valid_words else {scrambled}  # Return original if no match
+
+
+#unscrambling the whole sentence
+def unscramble_sentence(sentence):
+    """Unscrambles each word in a sentence."""
+    scrambled_words = sentence.split()
+    unscrambled_words = [list(unscramble_word(word))[0] for word in scrambled_words]
+    return ' '.join(unscrambled_words)
 
 # implenenting abstract syntax tree
 
@@ -152,33 +170,33 @@ def build_ast_from_tokens(tokens):
 
 
 while True:
-    user_review = input("\nEnter a review (or type 'quit' to exit): ")
+    user_review = input("\nEnter a review (scrambled or normal, or type 'quit' to exit): ")
     if user_review.lower() == 'quit':
         break
 
-    # 1) Clean the user's input
-    cleaned_input = clean_text(user_review)
+    # Unscramble the input
+    unscrambled_review = unscramble_sentence(user_review)
+    print(f"Unscrambled Input: {unscrambled_review}")
 
-    # 2) Tokenize the cleaned input for AST
+    # Clean the unscrambled input
+    cleaned_input = clean_text(unscrambled_review)
+
+    # Tokenize and build AST
     cleaned_tokens = nltk.word_tokenize(cleaned_input)
-
-    # 3) Build the AST
     ast_root = build_ast_from_tokens(cleaned_tokens)
     print("\nAbstract Syntax Tree (AST) for your input:")
     for pre, fill, node in RenderTree(ast_root):
         print(f"{pre}{node.name}")
 
-    # 4) Transform using the same TF-IDF vectorizer
+    # Transform and predict
     input_features = vectorizer.transform([cleaned_input])
-
-    # 5) Predict sentiment
     prediction = model.predict(input_features)[0]
 
-    # 6) Interpret the prediction
     if prediction == 1:
         print("Predicted feedback is : POSITIVE")
     else:
         print("Predicted feedback is : NEGATIVE")
+
 
 
 
