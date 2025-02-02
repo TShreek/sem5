@@ -1,130 +1,107 @@
-// Shared buffer class
-class Buffer {
-    private int[] buffer; // Array to hold the buffer's items
-    private int count = 0; // Number of items currently in the buffer
-    private int size; // Maximum capacity of the buffer
-    private int in = 0; // Index for inserting items into the buffer (write index)
-    private int out = 0; // Index for removing items from the buffer (read index)
 
-    // Constructor to initialize the buffer with a given size
-    public Buffer(int size) {
-        this.size = size; // Set the maximum buffer size
-        this.buffer = new int[size]; // Initialize the buffer array
+class SharedBuffer {
+    int[] buffer;
+    int size;
+    int in = 0, out = 0, count = 0;
+
+    public SharedBuffer(int size) {
+        this.size = size;
+        buffer = new int[size];
     }
 
-    // Produce an item and add it to the buffer
     public synchronized void produce(int item) {
-        // Wait if the buffer is full
         while (count == size) {
             try {
-                wait(); // Wait for space in the buffer
+                wait(); // Wait if buffer is full
             } catch (InterruptedException e) {
-                return; // Exit gracefully if interrupted
+                return;
             }
         }
-        buffer[in] = item; // Add the item at the current write index
-        in = (in + 1) % size; // Move to the next index, circularly
-        count++; // Increase the count of items in the buffer
-        System.out.println("Producer produced: " + item); // Output the produced item
-        notifyAll(); // Notify all waiting threads that an item was produced
+        buffer[in] = item;
+        in = (in + 1) % size;
+        count++;
+        System.out.println("Produced: " + item);
+        notifyAll(); // Notify consumer
     }
 
-    // Consume an item from the buffer
-    public synchronized int consume() {
-        // Wait if the buffer is empty
+    public synchronized void consume() {
         while (count == 0) {
             try {
-                wait(); // Wait for items to consume
+                wait(); // Wait if buffer is empty
             } catch (InterruptedException e) {
-                return -1; // Exit gracefully if interrupted
+                return;
             }
         }
-        int item = buffer[out]; // Get the item from the current read index
-        out = (out + 1) % size; // Move to the next index, circularly
-        count--; // Decrease the count of items in the buffer
-        System.out.println("Consumer consumed: " + item); // Output the consumed item
-        notifyAll(); // Notify all waiting threads that an item was consumed
-        return item; // Return the consumed item
+        int item = buffer[out];
+        out = (out + 1) % size;
+        count--;
+        System.out.println("Consumed: " + item);
+        notifyAll(); // Notify producer
     }
 }
 
-// Producer class - Produces items and adds them to the buffer
 class Producer implements Runnable {
-    private Buffer buffer; // Shared buffer object
-    private int maxItems; // Maximum number of items the producer will produce
+    private SharedBuffer sb;
+    private int max;
 
-    // Constructor to initialize the producer with a buffer and max items to produce
-    public Producer(Buffer buffer, int maxItems) {
-        this.buffer = buffer; // Set the buffer
-        this.maxItems = maxItems; // Set the maximum number of items to produce
+    public Producer(SharedBuffer sb, int max) {
+        this.sb = sb;
+        this.max = max;
     }
 
-    // Run method, executed when the thread starts
     @Override
     public void run() {
-        // Produce items and add them to the buffer
-        for (int i = 1; i <= maxItems; i++) {
-            buffer.produce(i); // Call produce method to add item to the buffer
+        for (int i = 0; i < max; i++) {
+            sb.produce(i);
             try {
-                Thread.sleep(500); // Simulate production time by sleeping for 500 ms
+                Thread.sleep(500);
             } catch (InterruptedException e) {
-                return; // Exit gracefully if interrupted
+                return;
             }
         }
     }
 }
 
-// Consumer class - Consumes items from the buffer
 class Consumer implements Runnable {
-    private Buffer buffer; // Shared buffer object
+    private SharedBuffer sb;
 
-    // Constructor to initialize the consumer with a buffer
-    public Consumer(Buffer buffer) {
-        this.buffer = buffer; // Set the buffer
+    public Consumer(SharedBuffer sb) {
+        this.sb = sb;
     }
 
-    // Run method, executed when the thread starts
     @Override
     public void run() {
-        // Continuously consume items until interrupted
-        while (true) {
-            int item = buffer.consume(); // Call consume method to get an item from the buffer
-            if (item == -1) break; // Exit if interrupted (item is -1)
-            try {
-                Thread.sleep(1000); // Simulate consumption time by sleeping for 1000 ms
-            } catch (InterruptedException e) {
-                return; // Exit gracefully if interrupted
+        try {
+            while (!Thread.currentThread().isInterrupted()) {
+                sb.consume();
+                Thread.sleep(500);
             }
+        } catch (InterruptedException e) {
+            System.out.println("Consumer thread interrupted.");
         }
     }
 }
 
-// Main class - Coordinates the producer and consumer threads
-public class p1 {
+public class p7 {
     public static void main(String[] args) {
-        int bufferSize = 5; // Maximum capacity of the buffer
-        int maxItemsToProduce = 10; // Number of items to produce
+        int bufSize = 5;
+        int toProduce = 10;
 
-        // Create a shared buffer with the specified size
-        Buffer buffer = new Buffer(bufferSize);
+        SharedBuffer sb = new SharedBuffer(bufSize);
+        Thread producerThread = new Thread(new Producer(sb, toProduce));
+        Thread consumerThread = new Thread(new Consumer(sb));
 
-        // Create the producer and consumer threads
-        Thread producerThread = new Thread(new Producer(buffer, maxItemsToProduce)); // Create producer thread
-        Thread consumerThread = new Thread(new Consumer(buffer)); // Create consumer thread
+        producerThread.start();
+        consumerThread.start();
 
-        // Start the producer and consumer threads
-        producerThread.start(); 
-        consumerThread.start(); 
-
-        // Wait for the producer thread to finish producing all items
         try {
-            producerThread.join(); // Ensure the main thread waits for the producer to finish
+            producerThread.join(); // Wait for producer to finish
         } catch (InterruptedException e) {
-            // Handle any interruptions gracefully
+            e.printStackTrace();
         }
 
-        // Stop the consumer thread gracefully by interrupting it
-        consumerThread.interrupt(); 
-        System.out.println("Producer-Consumer process completed."); // Output completion message
+        // Interrupt consumer safely
+        consumerThread.interrupt();
+        System.out.println("Producer - Consumer threads exiting.");
     }
 }
