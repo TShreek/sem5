@@ -1,49 +1,35 @@
 import java.sql.*;
 
-public class p10 {
+public class p10{
     public static void main(String[] args) {
         try {
-            // Establishing a connection
-            Connection connection = DriverManager.getConnection(
-                "jdbc:mysql://localhost:3306/your_database", // Add your database name
-                "root",
-                "password"
-            );
+            Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/demodb","root","");
+            Statement statement = conn.createStatement();
 
-            // Creating a statement
-            Statement statement = connection.createStatement();
+            //INSERT
+            String iQ1 = "INSERT INTO STUDENT (id,name,dept,age) VALUES (1,'aa','mech',21)";
+            String iQ2 = "INSERT INTO STUDENT (id,name,dept,age) VALUES (2,'bb','civil',24)";
+            statement.executeUpdate(iQ1);
+            statement.executeUpdate(iQ2);
 
-            // INSERT query (corrected syntax)
-            String insertQuery = "INSERT INTO STUDENT (id, name, age, department) VALUES (1, 'John', 21, 'Computer Science')";
-            statement.executeUpdate(insertQuery); // Use executeUpdate for INSERT
-            System.out.println("Record inserted successfully.");
-
-            // SELECT query
-            String readQuery = "SELECT * FROM STUDENT";
-            ResultSet resultSet = statement.executeQuery(readQuery); // Use executeQuery for SELECT
-            while (resultSet.next()) {
-                System.out.println(
-                    resultSet.getInt("id") + " - id, " +
-                    resultSet.getString("name") + " - name, " +
-                    resultSet.getInt("age") + " - age, " +
-                    resultSet.getString("department") + " - department"
-                );
+            //READ : 
+            String rQ1 = "SELECT * FROM STUDENT WHERE name = 'aa'";
+            ResultSet resultSet = statement.executeQuery(rQ1);
+            while(resultSet.next()){
+                System.out.println("Name :" + resultSet.getString("name") + "ID : " + resultSet.getInt("id") + "DEPT : " + resultSet.getString("dept"));
             }
 
-            // UPDATE query
-            String updateQuery = "UPDATE STUDENT SET age = 20 WHERE name = 'John'";
-            statement.executeUpdate(updateQuery); // Use executeUpdate for UPDATE
-            System.out.println("Record updated successfully.");
+            //UPDATE 
+            String uQ1 = "UPDATE STUDENTS SET age = 60 WHERE name = 'bb'";
+            statement.executeUpdate(uQ1);
 
-            // DELETE query
-            String deleteQuery = "DELETE FROM STUDENT WHERE name = 'John'";
-            statement.executeUpdate(deleteQuery); // Use executeUpdate for DELETE
-            System.out.println("Record deleted successfully.");
+            //DELETE : 
+            String dQ1 = "DELETE FROM STUDENTS WHERE id = 1";
+            statement.executeUpdate(dQ1);
+            conn.close();
 
-            // Close the connection
-            connection.close();
         } catch (SQLException e) {
-            e.printStackTrace(); // Handle SQL exceptions
+            e.printStackTrace();
         }
     }
 }
