@@ -1,10 +1,10 @@
 <web-app>
   <servlet>
-    <servlet-name>abc</servlet-name>
-    <servlet-class>VoterSrv</servlet-class>
+    <servlet-name>CheckAge</servlet-name>
+    <servlet-class>CheckAge</servlet-class>
   </servlet>
   <servlet-mapping>
-    <servlet-name>abc</servlet-name>
-    <url-pattern>/check</url-pattern> 
+    <servlet-name>CheckAge</servlet-name>
+    <url-pattern>ChechAge</url-pattern>
   </servlet-mapping>
 </web-app>
