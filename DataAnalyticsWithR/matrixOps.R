@@ -15,26 +15,33 @@ sum_matrix_A <- sum(matrix_A)
 mean_matrix_B <- mean(matrix_B)
 sd_matrix_B <- sd(matrix_B)
 
-# Task 5: Visualization
-library(ggplot2)
+# Task 5: Visualizationlibrary(ggplot2)
 library(reshape2)
 
-# Heatmap of matrix_A
-heatmap_data <- melt(matrix_A)
-heatmap_plot <- ggplot(heatmap_data, aes(x = Var1, y = Var2, fill = value)) +
+# Melt Matrix A for Heatmap
+melted_data <- melt(matrix_A)
+
+# Create Heatmap
+heatmap_data <- ggplot(melted_data, aes(x=Var2, y=Var1, fill=value)) +  # Fix x and y axes
   geom_tile() +
-  scale_fill_gradient(low = "white", high = "blue") +
-  labs(title = "Heatmap of Matrix A", x = "Column", y = "Row")
+  scale_fill_gradient(low="white", high="red") +  # Better contrast
+  labs(title="Heatmap of Matrix A", x="Columns", y="Rows")
 
-# Bar plot of row sums in matrix_B
+# Compute Row Sums for Matrix B
 row_sums <- rowSums(matrix_B)
-row_names <- paste("Row", 1:3)
+row_names <- paste("Row", 1:3)  # Fix row names format
 
-barplot_data <- data.frame(Row = row_names, Sum = row_sums)
-barplot_plot <- ggplot(barplot_data, aes(x = Row, y = Sum)) +
-  geom_bar(stat = "identity", fill = "green") +
-  labs(title = "Sums of Rows in Matrix B", x = "Row", y = "Sum")
+# Create Data Frame for Bar Plot
+row_data <- data.frame(Row = row_names, Sums = row_sums)
 
-# Display visualizations
-print(heatmap_plot)
-print(barplot_plot)
+# Create Bar Plot
+barplot_data <- ggplot(row_data, aes(x=Row, y=Sums, fill=Row)) +  # Fix axes
+  geom_bar(stat="identity", color="black") +  # Border color
+  ggtitle("Row Sum Comparison of Matrix B") +
+  xlab("Row Index") +
+  ylab("Row Sum") +
+  theme_minimal()
+
+# Print Plots
+print(heatmap_data)  # Displays heatmap
+print(barplot_data)  # Displays bar plot
